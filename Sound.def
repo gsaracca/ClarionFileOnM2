@@ -1,0 +1,31 @@
+DEFINITION MODULE Sound;
+
+PROCEDURE PlayScale( mayor :BOOLEAN; key :SHORTINT );
+(*
+   Toca una escala en "mayor" o "menor" en clave : "key".
+   Usa reales por lo tanto genera arriba de 10Kb de codigo mas de lo normal.
+*)
+
+PROCEDURE Alarm();
+(*
+   Suena la alarma.
+*)
+
+PROCEDURE Ring();
+(*
+   Hace un pitido.
+*)
+
+PROCEDURE Sirena();
+(*
+   Suena una sirena.
+*)
+
+PROCEDURE Beep( nota, dur :CARDINAL );
+(*
+   Ejecuta un sonido de "nota" con duraci¢n : "dur".
+*)
+
+CONST Pip ::= Ring; (* Compatibilidad con Magic de lib 1.00 *)
+
+END Sound.
