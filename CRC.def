@@ -1,0 +1,20 @@
+DEFINITION MODULE CRC;
+
+CONST MaxBuffer = 8*1024;
+
+TYPE CRCType = LONGCARD;
+
+PROCEDURE FileCRC32( file_name :ARRAY OF CHAR ) :CRCType;
+
+PROCEDURE CalcCRC32( Buff :ADDRESS; nCount :CARDINAL; CRC32 :CRCType ) :CRCType;
+(*
+    Forma de uso:
+
+      CRC := SIZE( <object> );
+      LOOP for each block of MaxBuffer size DO
+         CRC := CalcCRC32( SizeOfBlock, CRC );
+      END; loop
+      CRC := CRC XOR SIZE( <object> );
+*)
+
+END CRC.
