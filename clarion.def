@@ -1,85 +1,87 @@
-DEFINITION MODULE Clarion;
+DEFINITION MODULE db_db3;
 
-IMPORT FM;
+IMPORT FM, dBase;
 
-CONST FieldNameSize = 16;
+TYPE ptrDB3 = POINTER TO dB3File;
+CLASS dB3File;
+    f_DAT     :dBase.BaseType;
+    Dir       :FM.PathStr;
+    DataName  :FM.PathStr;
 
-TYPE FieldName    = ARRAY [ 0..FieldNameSize-1 ] OF CHAR;
-     FieldType    = BYTE;
-     FieldSize    = BYTE;
-     FieldPicture = ARRAY [ 0..255 ] OF CHAR;
-     FieldID      = CARDINAL;
-     AccessMode   = CARDINAL;
+    PROCEDURE LockFile();
+    PROCEDURE UnLockFile();
 
-CONST FLONG    = 01H;       (* LONG - long      = LONGINT                *)
-      FREAL    = 02H;       (* REAL - double    = LONGREAL               *)
-      FSTRING  = 03H;       (* STRING - char[]  = ARRAY [ 0..n ] OF CHAR *)
-      FPICTURE = 04H;       (* PICTURE - char[] = ARRAY [ 0..n ] OF CHAR *)
-      FBYTE    = 05H;       (* BYTE - char      = BYTE                   *)
-      FSHORT   = 06H;       (* SHORT - int      = INTEGER                *)
-      FGROUP   = 07H;       (* GROUP            = RECORD                 *)
-      FDECIMAL = 08H;       (* DECIMAL          = BCD                    *)
+    PROCEDURE SeekData(  i :FM.IndexType );
+    PROCEDURE WrData ( VAR d :ARRAY OF BYTE );
 
-TYPE FieldDef = RECORD
-        name :FieldName;
-        type :FieldType;
-        size :FieldSize;
-        pic  :FieldPicture;
-     END; (* FieldDef *)
+ (*# save, call( result_optional => on ) *)
+    PROCEDURE RdData ( VAR d :ARRAY OF BYTE ) :BOOLEAN;
+    PROCEDURE GetData ( i :FM.IndexType; VAR data :ARRAY OF BYTE ) :BOOLEAN;
+    PROCEDURE PutData ( i :FM.IndexType; VAR data :ARRAY OF BYTE ) :BOOLEAN;
+ (*# restore *)
 
-TYPE KeyDef = RECORD
-        name :FieldName;
+    VIRTUAL PROCEDURE InitData( VAR d :ARRAY OF BYTE );
 
-     END; (* keyDef *)
+    VIRTUAL PROCEDURE Comp( d1, d2 :FM.IndexType ) :BOOLEAN;
+    (*
+       Utilizado por el algoritmo de Sort.
+    *)
 
-CLASS ClarionFile;
+    VIRTUAL PROCEDURE Compare( VAR d1, d2 :ARRAY OF BYTE ) :INTEGER;
+    (*
+       Utilizado por el algoritmo de Busqueda Binaria.
+    *)
 
-    PROCEDURE Init( name    :ARRAY OF CHAR;
-                    recdef  :ARRAY OF FieldDef;
-                    keydef  :ARRAY OF KeyDef;
-                    create  :BOOLEAN;
-                    reclaim :BOOLEAN );
+    VIRTUAL PROCEDURE GetKeyStr( i :FM.IndexType; VAR s :ARRAY OF CHAR );
 
-    PROCEDURE SetField( field :FieldID; val :ARRAY OF BYTE );
-    PROCEDURE GetField( field :FieldID; val :ARRAY OF BYTE );
-    PROCEDURE ClrField( field :FieldID; mod :INTEGER );
-    PROCEDURE ClrRecord( mode :INTEGER );
-    PROCEDURE Clear();
+    PROCEDURE SetPath( path :ARRAY OF CHAR ); (* Agregado el 25-03-94 *)
 
-    PROCEDURE Create();
-    PROCEDURE Open( access_mode :AccessMode );
-    PROCEDURE Close();
-    PROCEDURE Copy( new_file :ClarionFile );
-    PROCEDURE Empty();
-    PROCEDURE Flush();
-    PROCEDURE Lock();
-    PROCEDURE Pack();
-    PROCEDURE Remove();
-    PROCEDURE Rename();
-    PROCEDURE Share( access_mode :AccessMode );
-    PROCEDURE Stream();
-    PROCEDURE UnLock();
+  (*# save, call( result_optional => on ) *)
+    PROCEDURE Open( name :ARRAY OF CHAR; fields :ARRAY OF dBase.FieldDef; new :BOOLEAN ) :BOOLEAN;
+  (*# restore *)
+    PROCEDURE Create( name :ARRAY OF CHAR; fields :ARRAY OF dBase.FieldDef );
+    PROCEDURE OpenExists( name :ARRAY OF CHAR ) :BOOLEAN;
+    PROCEDURE Exists( name :ARRAY OF CHAR ) :BOOLEAN;
+    PROCEDURE FileSize() :FM.IndexType;
+    PROCEDURE Sync();
+    PROCEDURE CloseFile();
 
-    PROCEDURE Add();
-    PROCEDURE Append();
-    PROCEDURE Delete();
-    PROCEDURE Get();
-    PROCEDURE Hold();
-    PROCEDURE Next();
-    PROCEDURE Previous();
-    PROCEDURE Put();
-    PROCEDURE Release();
-    PROCEDURE Reset();
-    PROCEDURE Set();
-    PROCEDURE Skip();
+    PROCEDURE New( VAR d :ARRAY OF BYTE );
 
-    PROCEDURE BOF()       :BOOLEAN;
-    PROCEDURE Bytes()     :LONGCARD;
-    PROCEDURE Duplicate() :BOOLEAN;
-    PROCEDURE EOF()       :BOOLEAN;
-    PROCEDURE Pointer()   :LONGCARD;
-    PROCEDURE Position()  :LONGCARD;
-    PROCEDURE Records()   :LONGCARD;
-END ClarionFile;
+ (*# save, call( result_optional => on ) *)
+    PROCEDURE Get( i :FM.IndexType; VAR d :ARRAY OF BYTE ) :BOOLEAN;
+ (*# restore *)
 
-END Clarion.
+    PROCEDURE Put( i :FM.IndexType; VAR d :ARRAY OF BYTE );
+    PROCEDURE Del( i :FM.IndexType );
+
+    PROCEDURE SearchFile(     search :ARRAY OF BYTE;
+                          VAR index  :FM.IndexType;
+                          VAR data   :ARRAY OF BYTE ) :BOOLEAN;
+
+ (*# save, call( result_optional => on ) *)
+    PROCEDURE SortFile() :BOOLEAN;
+    PROCEDURE Rebuild();
+    PROCEDURE UnSortFile() :BOOLEAN;
+ (*# restore *)
+
+    PROCEDURE Copy( VAR _file :dB3File; name :ARRAY OF CHAR );
+
+END dB3File;
+
+PROCEDURE Erase( name :ARRAY OF CHAR );
+PROCEDURE Rename( old_name, new_name :ARRAY OF CHAR );
+
+PROCEDURE Rebuild( name :ARRAY OF CHAR );
+
+TYPE ErrorType = CARDINAL;
+
+CONST no_error       = 0;
+      file_not_found = 1;
+
+PROCEDURE Error() :ErrorType;
+(*
+   Toma los errores de los archivos de "base_ndx".
+*)
+
+END db_db3.
