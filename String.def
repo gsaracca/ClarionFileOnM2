@@ -1,0 +1,190 @@
+DEFINITION MODULE String;
+
+IMPORT Str;
+
+CONST CharSet ::= Str.CHARSET;
+
+CONST FullSet = CharSet{ CHR(0)..CHR(255) };
+
+VAR FillChar :CHAR;    (* CHAR de relleno "WrStrAdj". Defecto ==> ' '       *)
+    ErrChar  :CHAR;    (* CHAR de error   "WrStrAdj". Defecto ==> '*'       *)
+
+    ErrWrite :BOOLEAN; (* IF ErrWrite ==> escribo solo lo lo que se indica
+                                          sino no hago nada.
+                                          Def ==> On *)
+
+    ErrFill  :BOOLEAN; (* IF ErrFill ==> lleno el ARRAY OF CHAR con ErrChar.
+                                         sino corto el ARRAY OF CHAR.
+                                         Def ==> Off *)
+
+PROCEDURE SaveChar();
+PROCEDURE RestoreChar();
+(*
+   Salva y reestablece el "FillChar".
+*)
+
+PROCEDURE SaveErr();
+PROCEDURE RestoreErr();
+(*
+   Salva y reestablece el "ErrChar" y la "ErrWrite".
+*)
+
+PROCEDURE CharRep( VAR str :ARRAY OF CHAR; ch :CHAR; count: CARDINAL );
+(*
+   Genera el ARRAY OF CHAR "str" con en el caracter : "ch" tantas veces como "count".
+*)
+
+PROCEDURE Card2Str( VAR s :ARRAY OF CHAR; n :CARDINAL; l :INTEGER );
+PROCEDURE LongCard2Str( VAR s :ARRAY OF CHAR; n :LONGCARD; l :INTEGER );
+PROCEDURE LongInt2Str( VAR s :ARRAY OF CHAR; n :LONGINT; l :INTEGER );
+(*
+   Convierte un long cardinal a un ARRAY OF CHAR ajustado en : "l".
+*)
+
+PROCEDURE StrAdj( VAR str1 :ARRAY OF CHAR; str :ARRAY OF CHAR; len :INTEGER );
+(*
+   Genera el ARRAY OF CHAR "str1" a partir del ARRAY OF CHAR : "str" con longitud "len".
+*)
+
+PROCEDURE ClearLastSpaces( VAR s :ARRAY OF CHAR );
+(*
+   Limpia los £ltimos espacios [ CHR(32) ] del ARRAY OF CHAR "s".
+*)
+
+CONST CLIP ::= ClearLastSpaces;
+
+PROCEDURE ClearLastChar( VAR s :ARRAY OF CHAR; ch :CHAR );
+(*
+   Limpia los £ltimos caracteres [ ch ] del ARRAY OF CHAR "s".
+   Idem al anterior pero para cualquier "ch".
+*)
+
+PROCEDURE ClearFirstSpaces( VAR s :ARRAY OF CHAR );
+(*
+   Limpia los primeros espacios [ CHR(32) ] del ARRAY OF CHAR "s".
+*)
+
+PROCEDURE ClearFirstChar( VAR s :ARRAY OF CHAR; ch :CHAR );
+(*
+   idem anterior pero comenzando de la izquierda.
+*)
+
+PROCEDURE BinaryToString( VAR a :ARRAY OF CHAR; l :CARDINAL );
+(*
+   Convierte un ARRAY OF BYTE en un ARRAY OF CHAR de m xima longitud "l".
+*)
+
+PROCEDURE ReplaceChar( VAR s :ARRAY OF CHAR; bc :CHAR; nc :CHAR );
+(*
+   Busca en el ARRAY OF CHAR "s" el caracter "bc" y en la primera ocurrencia lo
+   reemplaza por "nc".
+*)
+
+PROCEDURE RReplaceChar( VAR s :ARRAY OF CHAR; bc :CHAR; nc :CHAR );
+(*
+   Idem a ReplaceChar pero comienza la b£squeda por la derecha.
+*)
+
+PROCEDURE ReplaceAllChar( VAR s :ARRAY OF CHAR; bc :CHAR; nc :CHAR );
+(*
+   Busca en el ARRAY OF CHAR "s" el caracter "bc" y en todas las ocurrencias lo
+   reemplaza por el caracter : "nc".
+*)
+
+PROCEDURE DeleteChar( VAR s :ARRAY OF CHAR; ch :CHAR );
+(*
+   Elimina el caracter "ch" en todas sus ocurrencias en el ARRAY OF CHAR: "s".
+*)
+
+PROCEDURE FillStr( VAR s :ARRAY OF CHAR; ch :CHAR );
+(*
+   Llena un ARRAY OF CHAR "s" con el caracter : "ch".
+   desde 0 hasta HIGH( s ).
+*)
+
+PROCEDURE Espanol( n :LONGCARD; VAR frase :ARRAY OF CHAR );
+(*
+   Dado un n£mero "n" como valor el procedimiento devuelve una "frase" con
+   ese valor en espa¤ol.
+   Ej : para "n" = 12  ===> "frase" = "doce".
+        soporta desde 0 hasta 999,999,999,999.
+*)
+
+PROCEDURE Subst( VAR s1     :ARRAY OF CHAR;
+                     Target :ARRAY OF CHAR;
+                     New    :ARRAY OF CHAR );
+(*
+   Idem al Subst de la librer¡a std. del TopSpeed M2 ver 3.01.
+   Pero soluciona el bug que posee cuando el ARRAY OF CHAR est  lleno.
+*)
+
+PROCEDURE Lows( VAR str :ARRAY OF CHAR );
+(*
+   Idem al Caps de la libreria std. del TopSpeed M2 ver 3.01.
+   Pero soluciona el problema de pasar a may£sculas los nombres en
+   Castellano con asento o "¤".
+*)
+
+PROCEDURE Caps( VAR str :ARRAY OF CHAR );
+(*
+   Idem al Caps de la libreria std. del TopSpeed M2 ver 3.01.
+   Pero soluciona el problema de pasar a may£sculas los nombres en
+   Castellano con asento o "¤".
+*)
+
+PROCEDURE Capitals( VAR str :ARRAY OF CHAR );
+(*
+   Dado un ARRAY OF CHAR, lo pasa a este con cada palabra comenzando con
+   may£scula.
+*)
+
+PROCEDURE PasToStr( PasStr :ARRAY OF CHAR; VAR ModStr :ARRAY OF CHAR );
+(*
+   Convierte un ARRAY OF CHAR en formato de "Turbo Pascal" a un
+   ARRAY OF CHAR en formato de M¢dula-2.
+*)
+
+PROCEDURE StrToCard( str :ARRAY OF CHAR ) :CARDINAL;
+PROCEDURE ShtCardToStr( card :SHORTCARD; VAR str :ARRAY OF CHAR );
+PROCEDURE    CardToStr( card :CARDINAL;  VAR str :ARRAY OF CHAR );
+PROCEDURE LngCardToStr( card :LONGCARD;  VAR str :ARRAY OF CHAR );
+
+PROCEDURE IsUpper( VAR str :ARRAY OF CHAR ) :BOOLEAN;
+PROCEDURE IsLower( VAR str :ARRAY OF CHAR ) :BOOLEAN;
+PROCEDURE IsAlpha( VAR str :ARRAY OF CHAR ) :BOOLEAN;
+PROCEDURE IsString( VAR str:ARRAY OF CHAR; conj :CharSet ) :BOOLEAN;
+
+PROCEDURE Move( VAR s1 :ARRAY OF CHAR; s2 :ARRAY OF CHAR; pos :CARDINAL );
+(*
+   Dada una posici¢n en el ARRAY OF CHAR1 "s1" se sobreescriben los caracteres del
+   ARRAY OF CHAR2 "s2" a partir de esa posici¢n.
+*)
+
+PROCEDURE FlexRealToStr( r :LONGREAL; prec :CARDINAL;
+                         VAR str :ARRAY OF CHAR; VAR ok :BOOLEAN );
+(*
+   Convierte un longreal: "r" en un ARRAY OF CHAR: "str" eliminando los
+   ceros al final.
+   los parametros son iguales a los del Str.FixRealToStr.
+*)
+
+PROCEDURE GetOnly( VAR str1 :ARRAY OF CHAR; str :ARRAY OF CHAR; set :CharSet );
+(*
+   Solo toma los caracteres que indique el set.
+*)
+
+PROCEDURE SplitStr( str :ARRAY OF CHAR; long :CARDINAL;
+                    VAR str1, str2 :ARRAY OF CHAR );
+(*
+   Divide el ARRAY OF CHAR: "str" en dos sub-ARRAY OF CHARs:
+   * long               ===> "str1".
+   * HIGH( str ) - long ===> "str2".
+*)
+
+PROCEDURE Left  ( str :ARRAY OF CHAR; VAR res :ARRAY OF CHAR );
+PROCEDURE Center( str :ARRAY OF CHAR; VAR res :ARRAY OF CHAR; v :CARDINAL );
+PROCEDURE Right ( str :ARRAY OF CHAR; VAR res :ARRAY OF CHAR );
+
+PROCEDURE AddHotKey( VAR str :ARRAY OF CHAR; VAR hots :ARRAY OF CHAR ) :CARDINAL;
+
+END String.
