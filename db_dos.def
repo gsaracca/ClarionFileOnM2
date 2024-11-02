@@ -1,0 +1,106 @@
+DEFINITION MODULE db_dos;
+
+IMPORT FM;
+
+CONST DefArch = FM.DefDOS;
+      DefVer  = FM.DB_DOS_VER;
+
+TYPE FileHeadType = RECORD
+        id       :FM.IdType;     (* HGS Soft identificador                  *)
+        filetype :FM.ArchType;   (* tipo de archivo                         *)
+        ver      :FM.VerType;    (* versi¢n de la data_file                 *)
+        user_ver :FM.UserVerType;(* versi¢n de los datos grabados (usuario) *)
+        rec_size :FM.SizeType;   (* el tama¤o de los datos guardados        *)
+        encript  :FM.EncriptType;(* si el archivo esta encriptado           *)
+        RdOnPut  :BOOLEAN;       (* if RdOnPut => when "Put" compare        *)
+        open     :BOOLEAN;       (* si el archivo esta abierto              *)
+        sort     :BOOLEAN;       (* si el archivo esta ordenado.            *)
+        pos      :FM.IndexType;  (* posici¢n l¢gica actual.                 *)
+        max      :FM.IndexType;  (* FileSize of file en forma l¢gica.       *)
+        eoh      :FM.EndOfHead;  (* Fin de la cabecera                      *)
+     END; (* FileHeadType *)
+
+CONST FileHeadSize = SIZE( FileHeadType );
+
+TYPE ptrDF = POINTER TO DosFile;
+CLASS DosFile;
+    FileHead  :FileHeadType;
+    f_DAT     :FM.File;
+    Dir       :FM.PathStr;
+    DataName  :FM.PathStr;
+    FExt      :FM.ExtStr;
+
+    PROCEDURE LockFile();
+    PROCEDURE UnLockFile();
+
+    PROCEDURE WrHead();
+    PROCEDURE RdHead();
+
+    PROCEDURE SeekData(  i :FM.IndexType );
+    PROCEDURE WrData  ( VAR d :ARRAY OF BYTE );
+
+ (*# save, call( result_optional => on ) *)
+    PROCEDURE RdData ( VAR d :ARRAY OF BYTE ) :BOOLEAN;
+    PROCEDURE GetData( i :FM.IndexType; VAR data :ARRAY OF BYTE ) :BOOLEAN;
+    PROCEDURE PutData( i :FM.IndexType; VAR data :ARRAY OF BYTE ) :BOOLEAN;
+ (*# restore *)
+
+    VIRTUAL PROCEDURE InitData( VAR d :ARRAY OF BYTE );
+
+    VIRTUAL PROCEDURE Comp( d1, d2 :ARRAY OF BYTE ) :BOOLEAN;
+    (*
+       Utilizado por el algoritmo de Sort.
+    *)
+
+    VIRTUAL PROCEDURE Compare( VAR d1, d2 :ARRAY OF BYTE ) :INTEGER;
+    (*
+       Utilizado por el algoritmo de Busqueda Binaria.
+    *)
+
+    VIRTUAL PROCEDURE GetKeyStr( i :FM.IndexType; VAR s :ARRAY OF CHAR );
+
+    PROCEDURE SetFExt( fext :ARRAY OF CHAR );
+    PROCEDURE SetPath( path :ARRAY OF CHAR );
+
+  (*# save, call( result_optional => on ) *)
+    PROCEDURE Open( name :ARRAY OF CHAR; sizeRec :CARDINAL; new :BOOLEAN ) :BOOLEAN;
+  (*# restore *)
+    PROCEDURE Create( name :ARRAY OF CHAR; sizeRec :CARDINAL );
+    PROCEDURE OpenExists( name :ARRAY OF CHAR ) :BOOLEAN;
+    PROCEDURE Exists( name :ARRAY OF CHAR ) :BOOLEAN;
+    PROCEDURE FileSize() :FM.IndexType;
+    PROCEDURE Sync();
+    PROCEDURE CloseFile();
+
+    PROCEDURE New( VAR d :ARRAY OF BYTE );
+
+ (*# save, call( result_optional => on ) *)
+    PROCEDURE Get( i :FM.IndexType; VAR d :ARRAY OF BYTE ) :BOOLEAN;
+ (*# restore *)
+
+    PROCEDURE Put( i :FM.IndexType; VAR d :ARRAY OF BYTE );
+    PROCEDURE Del( i :FM.IndexType );
+
+    PROCEDURE SearchFile(     search :ARRAY OF BYTE;
+                          VAR index  :FM.IndexType;
+                          VAR data   :ARRAY OF BYTE ) :BOOLEAN;
+
+ (*# save, call( result_optional => on ) *)
+    PROCEDURE SortFile() :BOOLEAN;
+ (*# restore *)
+
+    PROCEDURE Copy( _file :DosFile; name :ARRAY OF CHAR );
+
+END DosFile;
+
+PROCEDURE Erase( name :ARRAY OF CHAR );
+PROCEDURE Rename( old_name, new_name :ARRAY OF CHAR );
+
+(* ------------------------------------------------------------------------ *)
+(* Procedimientos de db_dfile.                                              *)
+(* ------------------------------------------------------------------------ *)
+
+PROCEDURE Load( name, fext :ARRAY OF CHAR; VAR data :ARRAY OF BYTE );
+PROCEDURE Save( name, fext :ARRAY OF CHAR; VAR data :ARRAY OF BYTE );
+
+END db_dos.
