@@ -1,0 +1,145 @@
+DEFINITION MODULE dBase;
+
+IMPORT DateTime, FM;
+
+TYPE BaseType;
+
+TYPE FieldNameType = ARRAY [ 0.. 9 ] OF CHAR;
+     NameType      = ARRAY [ 0..10 ] OF CHAR;
+     Types    = (                         (* Phisical Equiv. *)
+                  Character,          (* ARRAY [ 0..n ] OF CHAR; *)
+                  Numeric,            (* ARRAY [ 0..n ] OF CHAR;
+                                         n = 0..19-1,
+                                         decimal point = n - 2 &
+                                                         (n IN 0..15);
+                                      *)
+                  Logical,            (* CHAR                    *)
+                  Date,               (* ARRAY [ 0..7 ] OF CHAR; *)
+                  Memo                (* ARRAY [ 0..9 ] OF CHAR; *)
+                );
+
+TYPE BoolType = CHAR;
+     DateType = ARRAY [ 0..7 ] OF CHAR;
+     MemoType = ARRAY [ 0..9 ] OF CHAR;
+
+(*
+   Parameters to Create: (* Data Definition Language "DDL" *)
+
+   TYPE myrec = ARRAY [ 0..4 ] OF FieldsType;
+
+   MyRegister = RECORD
+       Character :ARRAY [ 0..12 ] OF CHAR;
+       Numeric   :ARRAY [ 0..15 ] OF CHAR;
+       Logical   :BoolType;
+       Date      :DateType;
+       Memo      :MemoType;
+   END; (* MyRegister *)
+   ......................
+   Create( 'mybase',
+           myrec(
+               FieldDef( 'Character', Character, 13, 0 ),     0 : opcional.
+               FieldDef( 'Numerical', Numerical, 16, 2 ),
+               FieldDef( 'Logical',   Logical,    1, 0 ),  1, 0 : opcional.
+               FieldDef( 'Date',      Date,       8, 0 ),  8, 0 : opcional.
+               FieldDef( 'Memo',      Memo,      10, 0 )  10, 0 : opcional.
+           )
+         );
+*)
+
+TYPE FieldDef = RECORD
+         name   :FieldNameType;  (* debe ser terminado en cero *)
+         type   :Types;          (* C, N, L, D, M              *)
+         long   :CARDINAL;       (* longitud del campo.        *)
+         dec    :CARDINAL;       (* campos decimales.          *)
+     END; (* FieldsType *)
+
+PROCEDURE MakeName( dir, name :ARRAY OF CHAR; VAR full :ARRAY OF CHAR );
+
+PROCEDURE Create( name :ARRAY OF CHAR; fieldsDef :ARRAY OF FieldDef ) :BaseType;
+PROCEDURE Open( name :ARRAY OF CHAR ) :BaseType;
+PROCEDURE Close( VAR b :BaseType );
+
+PROCEDURE Exists( name :ARRAY OF CHAR ) :BOOLEAN;
+PROCEDURE Lock( b :BaseType );
+PROCEDURE UnLock( b :BaseType );
+PROCEDURE Sync( b :BaseType );
+PROCEDURE Init() :BaseType;
+
+PROCEDURE BlankRec( VAR b :BaseType; VAR rec :ARRAY OF BYTE );
+PROCEDURE AddRec( VAR b :BaseType; VAR rec :ARRAY OF BYTE );
+PROCEDURE PutRec( VAR b :BaseType; place :FM.IndexType; VAR rec :ARRAY OF BYTE );
+PROCEDURE GetRec( VAR b :BaseType; place :FM.IndexType; VAR rec :ARRAY OF BYTE );
+PROCEDURE DelRec( VAR b :BaseType; place :FM.IndexType );
+PROCEDURE UnDelRec( VAR b :BaseType; place :FM.IndexType );
+
+PROCEDURE Seek ( VAR b :BaseType; place :FM.IndexType );
+PROCEDURE Read ( VAR b :BaseType; VAR rec :ARRAY OF BYTE );
+PROCEDURE Write( VAR b :BaseType; VAR rec :ARRAY OF BYTE );
+
+PROCEDURE BlankField( VAR b :BaseType; n :CARDINAL; VAR rec :ARRAY OF BYTE );
+PROCEDURE GetField  ( VAR b :BaseType; n :CARDINAL; VAR field, rec :ARRAY OF BYTE );
+PROCEDURE PutField  ( VAR b :BaseType; n :CARDINAL; VAR field, rec :ARRAY OF BYTE );
+
+(*
+   Nota: todos los "fields" (campos) y los "rec" (registros) son pasados como
+   "VAR" no solo por que se los va a modificar en algunos casos sino tambi‚n
+   por que as¡ no se sobrecarga a la "pila" con demasiados datos.
+*)
+(*
+   Funciones sobre la base de datos.
+*)
+
+PROCEDURE BaseFile( b :BaseType; VAR name :ARRAY OF CHAR );
+PROCEDURE IndexFile( b :BaseType; VAR name :ARRAY OF CHAR );
+PROCEDURE Version( b :BaseType; VAR ver :CARDINAL );
+PROCEDURE LastUpDate( b :BaseType; VAR d, m, a :CARDINAL );
+PROCEDURE RecCount( b :BaseType ) :FM.IndexType;
+PROCEDURE RecSize( b :BaseType ) :CARDINAL;
+
+PROCEDURE Field_count( b :BaseType ) :CARDINAL;
+
+PROCEDURE Field_name( b :BaseType; n :CARDINAL; VAR name :ARRAY OF CHAR );
+PROCEDURE Field_type( b :BaseType; n :CARDINAL; VAR type :Types );
+PROCEDURE Field_size( b :BaseType; n :CARDINAL; VAR size :CARDINAL );
+PROCEDURE Field_decs( b :BaseType; n :CARDINAL; VAR decs :CARDINAL );
+
+PROCEDURE BOF( b :BaseType ) :BOOLEAN;    (* Si esta el archio al principio *)
+PROCEDURE EOF( b :BaseType ) :BOOLEAN;    (* Si esta el archivo en el final *)
+PROCEDURE Pos( b :BaseType ) :FM.IndexType;   (* Posici¢n en la base de datos *)
+PROCEDURE Deleted( b :BaseType ) :BOOLEAN;
+(*
+   si el registro actual esta borrado.
+*)
+
+PROCEDURE DOresult() :CARDINAL; (* ver codigos de error. *)
+
+(* ------------------------------------------------------------------------ *)
+(* Procedimientos de conversi¢n de datos de Modula-2 --> dBase III+         *)
+(* ------------------------------------------------------------------------ *)
+
+PROCEDURE AssignStr  ( VAR str :ARRAY OF CHAR; str2    :ARRAY OF CHAR     );
+PROCEDURE AssignCard ( VAR str :ARRAY OF CHAR; card    :CARDINAL          );
+PROCEDURE AssignLCard( VAR str :ARRAY OF CHAR; lngcard :LONGCARD          );
+PROCEDURE AssignDate ( VAR str :ARRAY OF CHAR; date    :DateTime.DateType );
+
+CONST (* Errores en la base de datos. *)
+      no_error              =   0;
+      too_many_fields       =   1;
+      field_name_error      =   2;
+      field_name_exists     =   3;
+      field_invalid_type    =   4;
+      field_invalid_long    =   5;
+      field_invalid_dec     =   6;
+      no_dbase_file         =   7; (* no es un archivo dbase. o mala versi¢n *)
+      head_too_big          =   8;
+      rec_too_big           =   9;
+      io_error              =  10; (* ver : FM.IOresult()  *)
+      head_size_too_big     =  11;
+      head_size_corrupted   =  12;
+      rec_size_too_big      =  13;
+      corrupted_file        =  14;
+      diferent_record_count =  15;
+      memo_file_not_found   =  16;
+      unknow_error          = 255; (* ver : Lib.SysErrno() || FM.IOresult *)
+
+END dBase.
