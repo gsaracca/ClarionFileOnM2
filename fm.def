@@ -1,0 +1,141 @@
+DEFINITION MODULE FM;
+
+(* ------------------------------------------------------------------------ *)
+(* M¢dulo: "FileManager" de soporte de:                                     *)
+(*         Archivos tipo "FIO" en Red.                                      *)
+(*         Control de instalaci¢n de "SHARE".                               *)
+(*         Soporte de redirecci¢n "FIOR".                                   *)
+(*         Soporte de funciones del m¢dulo "DOS"                            *)
+(* By: Saracca, H‚ctor Gustavo                                              *)
+(*     (c) 1994.                                                            *)
+(* ------------------------------------------------------------------------ *)
+
+IMPORT FIO, FIOR;
+
+(* ------------------------------------------------------------------------ *)
+(* ALIAS del FIO y FIOR                                                     *)
+(* ------------------------------------------------------------------------ *)
+
+CONST File        ::= FIO.File;             (* TYPE  *)
+      PathStr     ::= FIO.PathStr;          (* TYPE  *)
+      PathTail    ::= FIO.PathTail;         (* TYPE  *)
+      ExtStr      ::= FIOR.ExtStr;          (* TYPE  *)
+      DirEntry    ::= FIO.DirEntry;         (* TYPE  *)
+      FileAttr    ::= FIO.FileAttr;         (* TYPE  *)
+
+      _compat     ::= FIO.ShareCompat;      (* CONST *)
+      _deny_read  ::= FIO.ShareDenyRD;      (* CONST *)
+      _deny_write ::= FIO.ShareDenyWR;      (* CONST *)
+      _deny_rw    ::= FIO.ShareDenyRW;      (* CONST *)
+      _deny_none  ::= FIO.ShareDenyNone;    (* CONST *)
+      _all        ::= FIO.ShareAll;         (* CONST *)
+      _no_inherit ::= FIO.ShareNoInherit;   (* CONST *)
+
+      EOF         ::= FIO.EOF;              (* VAR   *)
+      SuffixChar  ::= FIO.SuffixChar;       (* VAR   *)
+      PrefixChar  ::= FIO.PrefixChar;       (* VAR   *)
+
+      RdStr       ::= FIO.RdStr;            (* PROC  *)
+      WrCharRep   ::= FIO.WrCharRep;        (* PROC  *)
+      WrStr       ::= FIO.WrStr;            (* PROC  *)
+      WrLn        ::= FIO.WrLn;             (* PROC  *)
+      PathFind    ::= FIOR.FindPath;        (* PROC  *)
+      PathFindNew ::= FIOR.FindNewPath;     (* PROC  *)
+      ReadFirst   ::= FIO.ReadFirstEntry;   (* PROC  *)
+      ReadNext    ::= FIO.ReadNextEntry;    (* PROC  *)
+      MkDir       ::= FIO.MkDir;            (* PROC  *)
+      GetDrive    ::= FIO.GetDrive;         (* PROC  *)
+      RemoveExt   ::= FIOR.RemoveExtension; (* PROC  *)
+      ChangeExt   ::= FIOR.ChangeExtension; (* PROC  *)
+
+TYPE DrvStr = ARRAY [ 0..2 ] OF CHAR;
+
+VAR share :BOOLEAN;
+
+(* ------------------------------------------------------------------------ *)
+(* Definici¢n de constantes para las bases de datos.                        *)
+(* ------------------------------------------------------------------------ *)
+
+TYPE DataType = ARRAY [ 0..(16*1024)-1 ] OF BYTE;
+     ptrDT    = POINTER TO DataType;
+
+TYPE IdType      = CARDINAL;
+     ArchType    = SHORTCARD;
+     VerType     = SHORTCARD;
+     UserVerType = SHORTCARD;
+     SizeType    = CARDINAL;
+     EncriptType = ARRAY [ 0..11 ] OF CHAR;
+     IndexType   = LONGCARD;
+     FileIndex   = LONGCARD;
+     EndOfHead   = CARDINAL;
+
+CONST HGS_ID = 0ABCDH;
+      EOH    = 0FFFFH;
+
+CONST DefNUL   = ArchType( 00 );   (* arch: nulo                       *)
+      DefDOS   = ArchType( 01 );   (* arch: secuencial no implementado *)
+      DefNDX   = ArchType( 02 );   (* arch: IndexFile  en BaseNDX      *)
+      DefDB3   = ArchType( 03 );   (* arch: dBase III+ en dB3File      *)
+      DefDFILE = DefDOS;           (* arch: DataFile   en DataFile     *)
+      DefBTRV  = ArchType( 05 );   (* arch: BTrieve    en BtrvFile     *)
+      DefASCII = ArchType( 06 );   (* arch: ASCII      en AsciiFile    *)
+      DefMBASE = ArchType( 07 );   (* arch: ModBase    en ModFile      *)
+
+CONST DefUserVer = UserVerType( 01 ); (* Versi¢n de los datos          *)
+
+CONST DB_DOS_VER   = VerType( 01 );
+      DB_NET_VER   = VerType( 01 );
+      DB_DB3_VER   = VerType( 01 );
+      DB_BTRV_VER  = VerType( 01 );
+      DB_ASCII_VER = VerType( 01 );
+      DB_DFILE_VER = DB_DOS_VER;
+      DB_MBASE_VER = VerType( 01 );
+
+CONST DB_DOS_FEXT   = 'DTA';
+      DB_NET_FEXT   = 'DAT';        DB_NET_IEXT   = 'NDX';
+      DB_DB3_FEXT   = 'DBF';        DB_DB3_IEXT   = 'NDX';
+      DB_BTRV_FEXT  = 'BTR';
+      DB_ASCII_FEXT = 'TXT';
+      DB_DFILE_FEXT = DB_DOS_FEXT;
+      DB_MBASE_FEXT = 'MDB';        DB_MBASE_DEXT = 'MDF';  (* Definici¢n *)
+
+CONST DataSize = SIZE( DataType );
+      NullFile = MAX( File );
+
+PROCEDURE SetShare( share_mode :BITSET );
+
+PROCEDURE Exists( name :ARRAY OF CHAR ) :BOOLEAN;
+PROCEDURE Lookup( name :ARRAY OF CHAR; new, append :BOOLEAN ) :File;
+PROCEDURE Open  ( name :ARRAY OF CHAR ) :File;
+PROCEDURE Create( name :ARRAY OF CHAR ) :File;
+PROCEDURE Append( name :ARRAY OF CHAR ) :File;
+PROCEDURE Erase ( name :ARRAY OF CHAR );
+PROCEDURE Rename( source, target :ARRAY OF CHAR );
+PROCEDURE Close ( f :File );
+
+(*# save, call( result_optional => on ) *)
+PROCEDURE Lock   ( f :File; pos, size :LONGCARD ) :BOOLEAN;
+PROCEDURE UnLock ( f :File; pos, size :LONGCARD ) :BOOLEAN;
+PROCEDURE RdBlock( f :File; VAR buff :ARRAY OF BYTE; size :CARDINAL ) :BOOLEAN;
+PROCEDURE WrBlock( f :File;     buff :ARRAY OF BYTE; size :CARDINAL ) :BOOLEAN;
+PROCEDURE Seek   ( f :File; pos :LONGCARD ) :BOOLEAN;
+PROCEDURE Flush  ( f :File ) :BOOLEAN;
+(*# restore *)
+
+PROCEDURE GetPos  ( f :File ) :LONGCARD;
+PROCEDURE Size    ( f :File ) :LONGCARD;
+PROCEDURE Truncate( f :File );
+
+PROCEDURE ExistsDir( dir :ARRAY OF CHAR ) :BOOLEAN;
+
+PROCEDURE MakeName( path, tail, ext :ARRAY OF CHAR; VAR fname :ARRAY OF CHAR );
+
+(* ------------------------------------------------------------------------ *)
+(* Procedimientos generales de seguimiento.                                 *)
+(* ------------------------------------------------------------------------ *)
+
+PROCEDURE AddError( err_str :ARRAY OF CHAR; break :BOOLEAN );
+PROCEDURE Recover ( file_name, err_str :ARRAY OF CHAR; cond  :BOOLEAN ) :BOOLEAN;
+PROCEDURE DoError ( file_name, err_str :ARRAY OF CHAR );
+
+END FM.
