@@ -1,0 +1,85 @@
+DEFINITION MODULE Clarion;
+
+IMPORT FM;
+
+CONST FieldNameSize = 16;
+
+TYPE FieldName    = ARRAY [ 0..FieldNameSize-1 ] OF CHAR;
+     FieldType    = BYTE;
+     FieldSize    = BYTE;
+     FieldPicture = ARRAY [ 0..255 ] OF CHAR;
+     FieldID      = CARDINAL;
+     AccessMode   = CARDINAL;
+
+CONST FLONG    = 01H;       (* LONG - long      = LONGINT                *)
+      FREAL    = 02H;       (* REAL - double    = LONGREAL               *)
+      FSTRING  = 03H;       (* STRING - char[]  = ARRAY [ 0..n ] OF CHAR *)
+      FPICTURE = 04H;       (* PICTURE - char[] = ARRAY [ 0..n ] OF CHAR *)
+      FBYTE    = 05H;       (* BYTE - char      = BYTE                   *)
+      FSHORT   = 06H;       (* SHORT - int      = INTEGER                *)
+      FGROUP   = 07H;       (* GROUP            = RECORD                 *)
+      FDECIMAL = 08H;       (* DECIMAL          = BCD                    *)
+
+TYPE FieldDef = RECORD
+        name :FieldName;
+        type :FieldType;
+        size :FieldSize;
+        pic  :FieldPicture;
+     END; (* FieldDef *)
+
+TYPE KeyDef = RECORD
+        name :FieldName;
+
+     END; (* keyDef *)
+
+CLASS ClarionFile;
+
+    PROCEDURE Init( name    :ARRAY OF CHAR;
+                    recdef  :ARRAY OF FieldDef;
+                    keydef  :ARRAY OF KeyDef;
+                    create  :BOOLEAN;
+                    reclaim :BOOLEAN );
+
+    PROCEDURE SetField( field :FieldID; val :ARRAY OF BYTE );
+    PROCEDURE GetField( field :FieldID; val :ARRAY OF BYTE );
+    PROCEDURE ClrField( field :FieldID; mod :INTEGER );
+    PROCEDURE ClrRecord( mode :INTEGER );
+    PROCEDURE Clear();
+
+    PROCEDURE Create();
+    PROCEDURE Open( access_mode :AccessMode );
+    PROCEDURE Close();
+    PROCEDURE Copy( new_file :ClarionFile );
+    PROCEDURE Empty();
+    PROCEDURE Flush();
+    PROCEDURE Lock();
+    PROCEDURE Pack();
+    PROCEDURE Remove();
+    PROCEDURE Rename();
+    PROCEDURE Share( access_mode :AccessMode );
+    PROCEDURE Stream();
+    PROCEDURE UnLock();
+
+    PROCEDURE Add();
+    PROCEDURE Append();
+    PROCEDURE Delete();
+    PROCEDURE Get();
+    PROCEDURE Hold();
+    PROCEDURE Next();
+    PROCEDURE Previous();
+    PROCEDURE Put();
+    PROCEDURE Release();
+    PROCEDURE Reset();
+    PROCEDURE Set();
+    PROCEDURE Skip();
+
+    PROCEDURE BOF()       :BOOLEAN;
+    PROCEDURE Bytes()     :LONGCARD;
+    PROCEDURE Duplicate() :BOOLEAN;
+    PROCEDURE EOF()       :BOOLEAN;
+    PROCEDURE Pointer()   :LONGCARD;
+    PROCEDURE Position()  :LONGCARD;
+    PROCEDURE Records()   :LONGCARD;
+END ClarionFile;
+
+END Clarion.
