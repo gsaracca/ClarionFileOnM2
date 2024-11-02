@@ -1,0 +1,14 @@
+DEFINITION MODULE M2ZIP;
+
+CONST BufferMaxSize = 32 * 1024;
+      BufferMax     = BufferMaxSize-1;
+
+TYPE BufferIndex = [ 0..BufferMax     ];
+     BufferSize  = [ 0..BufferMaxSize ];
+     BufferArray = ARRAY BufferIndex OF SHORTCARD;
+     BufferPtr   = POINTER TO BufferArray;
+
+PROCEDURE Zip  ( src, trg :BufferPtr; src_size :BufferSize ) :BufferSize;
+PROCEDURE UnZip( src, trg :BufferPtr; src_size :BufferSize ) :BufferSize;
+
+END M2ZIP.
