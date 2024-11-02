@@ -1,0 +1,50 @@
+DEFINITION MODULE db_btrv;
+
+IMPORT FM, BTRV;
+
+TYPE ptrBtrvFile = POINTER TO BtrvFile;
+CLASS BtrvFile;
+    f_DAT    :BTRV.BFile;
+    Dir      :BTRV.FileName;
+    DataName :BTRV.FileName;
+
+    PROCEDURE LockFile();       (* Begin Transaction *)
+    PROCEDURE UnLockFile();     (* End   Transaction *)
+
+    PROCEDURE SetPath( path :ARRAY OF CHAR );
+    PROCEDURE SetIDX( index :BTRV.KeyRange );
+
+  (*# save, call( result_optional => on ) *)
+    PROCEDURE Open( name :ARRAY OF CHAR; spec :BTRV.FileSpec; new :BOOLEAN ) :BOOLEAN;
+  (*# restore *)
+    PROCEDURE Create( name :ARRAY OF CHAR; spec :BTRV.FileSpec );
+    PROCEDURE OpenExists( name :ARRAY OF CHAR ) :BOOLEAN;
+    PROCEDURE Exists( name :ARRAY OF CHAR ) :BOOLEAN;
+    PROCEDURE FileSize() :FM.IndexType;
+    PROCEDURE CloseFile();
+
+  (*# save, call( result_optional => on ) *)
+    PROCEDURE New( VAR d :ARRAY OF BYTE ) :FM.IndexType;
+  (*# restore *)
+    PROCEDURE Get( i :FM.IndexType; VAR d :ARRAY OF BYTE );
+    PROCEDURE Put( i :FM.IndexType; VAR d :ARRAY OF BYTE );
+    PROCEDURE Del( i :FM.IndexType );
+
+    PROCEDURE SearchFile(     search :ARRAY OF BYTE;
+                          VAR index  :FM.IndexType;
+                          VAR data   :ARRAY OF BYTE ) :BOOLEAN;
+
+    PROCEDURE GetFirst( VAR pos :FM.IndexType; VAR d :ARRAY OF BYTE );
+    PROCEDURE GetNext ( VAR pos :FM.IndexType; VAR d :ARRAY OF BYTE );
+
+    PROCEDURE SUpdate();
+    PROCEDURE GetSpec() :BTRV.FileSpec;
+
+    PROCEDURE Copy( VAR _file :BtrvFile; name :ARRAY OF CHAR );
+
+END BtrvFile;
+
+PROCEDURE Erase( name :ARRAY OF CHAR );
+PROCEDURE Rename( old_name, new_name :ARRAY OF CHAR );
+
+END db_btrv.
