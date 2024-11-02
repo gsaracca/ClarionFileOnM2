@@ -1,0 +1,105 @@
+DEFINITION MODULE db_lzg;
+
+IMPORT CRC, FM, LZDEF;
+
+CONST MaxBuff = CRC.MaxBuffer; (* 8*1024-1 *)
+
+TYPE Buffer  = ARRAY [ 0..MaxBuff-1 ] OF BYTE;
+     PBuffer = POINTER TO Buffer;
+
+TYPE IdType       = ARRAY [ 0..3 ] OF CHAR;
+     FileVerType  = CARDINAL;
+     AlgoritmType = CARDINAL;
+     FileTypes    = CARDINAL;
+     ErrorType    = CARDINAL;
+
+(* Error's types *)
+CONST _NO_ERROR             = 000H;
+      _RD_ERROR_HEAD        = 0E1H;
+      _RD_ERROR_SIZE        = 0E2H;
+      _RD_ERROR_PACK        = 0E3H;
+      _WR_ERROR_HEAD        = 0E4H;
+      _WR_ERROR_SIZE        = 0E5H;
+      _WR_ERROR_PACK        = 0E6H;
+      _NON_COMPRESS_FILE    = 0E7H;
+      _NON_LZG_FILE         = 0E8H;
+      _BAD_DECOMPRESS       = 0E9H;
+      _BAD_VERSION          = 0EAH;
+      _BAD_CRC              = 0EBH;
+      _FILE_NOT_FOUND       = 0ECH;
+      _INVALID_INPUT_FILE   = 0EDH;
+      _RD_ERROR             = 0EEH;
+      _WR_ERROR             = 0EFH;
+      _BAD_LZG_VERSION_FILE = 0E0H;
+      _FILE_EXISTS          = 0E1H;
+      _FILE_NOT_EXISTS      = 0E2H;
+      _BAD_BLOCKS_COUNT     = 0E3H;
+
+(* algoritm's types *)
+CONST LZNO = 00000H;    (* no-compression algoritm            *)
+      LZKH = 00001H;    (* Kurn Haenen LZ algoritm            *)
+      LZM2 = 00002H;    (* TopSpeed LZ implementation         *)
+      LZSS = 00003H;    (* Haruhiko Okumura LZ implementation *)
+
+(* file's types *)
+CONST FTUNK = 0FFFFH;   (* tipo de archivo desconocido        *)
+      FTBIN = 00000H;   (* tipo de archivo binario            *)
+      FTEXE = 00001H;   (* tipo de archivo ejecutable         *)
+      FTTXT = 00002H;   (* tipo de archivo de texto           *)
+
+TYPE HeadType = RECORD
+        id          :IdType;       (* file-ID                            *)
+        version     :FileVerType;  (* file-version of LZG compressor     *)
+        algoritm    :AlgoritmType; (* algoritmo de compression utilizado *)
+        file_type   :FileTypes;    (* tipo de archivo detectado          *)
+        file_name   :FM.PathStr;   (* nombre del archivo original        *)
+        attr        :FM.FAttr;     (* attributos del archivo original    *)
+        date        :FM.FileDate;  (* fecha del archivo original         *)
+        comp_size   :LONGCARD;     (* Compress size                      *)
+        orig_size   :LONGCARD;     (* Original size                      *)
+        CRC32       :CRC.CRCType;  (* CRC de 32 bits                     *)
+        blocks      :LONGCARD;     (* Cantidad de block's in the file    *)
+        block_size  :CARDINAL;     (* Longitud m xima del block de comp  *)
+        eoh         :FM.EndOfHead; (* Fin de la cabecera                 *)
+     END (* HeadType *);
+
+PROCEDURE XOR( a, b :LONGINT ) :LONGINT;
+
+TYPE ptrLF = POINTER TO LZG_FILE;
+CLASS LZG_FILE;
+    head        :HeadType;
+    file        :FM.File;
+    path        :FM.PathStr;
+    name        :FM.PathStr;
+    over        :BOOLEAN;
+    ErrorID     :ErrorType;
+    Compress    :LZDEF.CompressProc;
+    UnCompress  :LZDEF.UnCompressProc;
+    create_mode :BOOLEAN;
+
+    PROCEDURE WrHead();
+    PROCEDURE RdHead();
+
+    PROCEDURE SetPath( path :ARRAY OF CHAR );
+    PROCEDURE SetOver( on   :BOOLEAN       );
+    PROCEDURE SetAlgoritm( algo :AlgoritmType );
+
+    PROCEDURE Open( _name :ARRAY OF CHAR );
+    PROCEDURE Create( _name,
+                      source_name :ARRAY OF CHAR;
+                      source_size :LONGCARD;
+                      source_date :FM.FileDate;
+                      algo        :AlgoritmType;
+                      ftype       :FileTypes );
+    PROCEDURE Exists( _name :ARRAY OF CHAR ) :BOOLEAN;
+    PROCEDURE Close();
+
+    PROCEDURE Add( src_buffer :PBuffer; size :CARDINAL ) :CARDINAL;
+    PROCEDURE Get( VAR trg_buffer :PBuffer; VAR Zsize, Nsize :CARDINAL ) :BOOLEAN;
+
+    PROCEDURE IsError() :BOOLEAN;
+    PROCEDURE Error() :ErrorType;
+
+END LZG_FILE;
+
+END db_lzg.
