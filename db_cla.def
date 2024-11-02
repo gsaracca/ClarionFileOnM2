@@ -1,0 +1,95 @@
+DEFINITION MODULE db_cla;
+
+(* ------------------------------------------------------------------------ *)
+(* Clarion data-base managment const, types, variables & procedures.        *)
+(* ------------------------------------------------------------------------ *)
+(*# call( result_optional => on )                                           *)
+(*------------------------------------------------------------------------- *)
+
+TYPE File;
+
+CONST key_def    = 00H;     (* default key type                             *)
+      key_unique = 01H;     (* default: not unique, allow duplicates        *)
+      key_case   = 02H;     (* default: no case sensitive                   *)
+      key_null   = 04H;     (* default: exclude nulls                       *)
+      key_index  = 08H;     (* default: key type                            *)
+
+CONST field_long_type    = 1;
+      field_real_type    = 2;
+      field_string_type  = 3;
+      field_pic_type     = 4;
+      field_byte_type    = 5;
+      field_short_type   = 6;
+      field_group_type   = 7;
+      field_decimal_type = 8;
+
+PROCEDURE Init( VAR file :File; pre :ARRAY OF CHAR );
+
+PROCEDURE AddFieldLong ( VAR file :File; name :ARRAY OF CHAR );
+PROCEDURE AddFieldReal ( VAR file :File; name :ARRAY OF CHAR );
+PROCEDURE AddFieldStr  ( VAR file :File; name :ARRAY OF CHAR; sz :CARDINAL );
+PROCEDURE AddFieldPic  ( VAR file :File; name :ARRAY OF CHAR );
+PROCEDURE AddFieldByte ( VAR file :File; name :ARRAY OF CHAR );
+PROCEDURE AddFieldShort( VAR file :File; name :ARRAY OF CHAR );
+PROCEDURE AddFieldGroup( VAR file :File; name :ARRAY OF CHAR );
+PROCEDURE AddFieldDec  ( VAR file :File; name :ARRAY OF CHAR );
+
+PROCEDURE AddKey( VAR file :File; name :ARRAY OF CHAR; attr :SHORTCARD );
+PROCEDURE AddKeyField( VAR file :File; fnum :CARDINAL );
+
+PROCEDURE CopyStruct( VAR target :File; source :File );
+
+PROCEDURE Open    ( VAR file :File; name :ARRAY OF CHAR );
+PROCEDURE Create  ( VAR file :File; name :ARRAY OF CHAR );
+PROCEDURE Seek    ( VAR file :File; i :LONGCARD );
+PROCEDURE Read    ( VAR file :File; VAR rec :ARRAY OF BYTE ) :BOOLEAN;
+PROCEDURE Write   ( VAR file :File; VAR rec :ARRAY OF BYTE );
+PROCEDURE Close   ( VAR file :File );
+PROCEDURE Done    ( VAR file :File );
+
+PROCEDURE Fields   ( VAR file :File ) :CARDINAL;
+PROCEDURE FieldName( VAR file :File; i :CARDINAL; VAR name :ARRAY OF CHAR );
+PROCEDURE FieldType( VAR file :File; i :CARDINAL ) :CARDINAL;
+PROCEDURE FieldSize( VAR file :File; i :CARDINAL ) :CARDINAL;
+
+PROCEDURE FieldData( VAR file :File; i :CARDINAL; VAR r, d :ARRAY OF BYTE );
+
+PROCEDURE Records  ( VAR file :File ) :LONGCARD;
+
+(* ------------------------------------------------------------------------ *)
+(* Type equivalences.  These are provided to provide a consistent and       *)
+(* portable interface for Clarion code.                                     *)
+(* ------------------------------------------------------------------------ *)
+
+CONST C_BYTE   ::= BYTE;        (* Clarion Type: BYTE                   *)
+      C_SHORT  ::= INTEGER;     (* Clarion Type: SHORT                  *)
+      C_USHORT ::= CARDINAL;    (* Clarion Type: UNSIGNED SHORT         *)
+      C_LONG   ::= LONGINT;     (* Clarion Type: LONG                   *)
+      C_ULONG  ::= LONGCARD;    (* Clarion Type: UNSIGNED LONG          *)
+      C_SREAL  ::= REAL;        (* Clarion Type: SHORT REAL             *)
+      C_REAL   ::= LONGREAL;    (* Clarion Type: REAL                   *)
+      C_DATE   ::= C_LONG;      (* Clarion Type: DATE                   *)
+      C_TIME   ::= C_LONG;      (* Clarion Type: TIME                   *)
+
+(* ------------------------------------------------------------------------ *)
+(* Procedures for convert dos-date & dos-time into clarion date & time.     *)
+(* ------------------------------------------------------------------------ *)
+
+PROCEDURE AssignByte ( VAR byte  :C_BYTE;        _bool :BOOLEAN       );
+PROCEDURE AssignShort( VAR short :C_SHORT;       _card :CARDINAL      );
+PROCEDURE AssignLong ( VAR long  :C_LONG;        _long :LONGCARD      );
+PROCEDURE AssignStr  ( VAR str   :ARRAY OF CHAR; _str  :ARRAY OF CHAR );
+PROCEDURE AssignReal ( VAR real  :C_REAL;        _real :LONGREAL      );
+PROCEDURE AssignDate ( VAR date  :C_DATE;        _date :CARDINAL      );
+PROCEDURE AssignTime ( VAR time  :C_TIME;        _time :CARDINAL      );
+
+PROCEDURE DateCompress( d, m, a :CARDINAL ) :C_DATE;
+PROCEDURE DateUnCompress( date :C_DATE; VAR d, m, a :CARDINAL );
+
+PROCEDURE Date_To_CLA_Date( date :CARDINAL; VAR _date :C_DATE   );
+PROCEDURE CLA_Date_To_Date( date :C_DATE;   VAR _date :CARDINAL );
+
+PROCEDURE DOS_Date_To_STD_Date( DosDate :CARDINAL) :C_DATE;
+PROCEDURE DOS_Time_To_STD_Time( DosTime :CARDINAL) :C_TIME;
+
+END db_cla.
