@@ -1,0 +1,26 @@
+DEFINITION MODULE LZDEF;
+
+CONST BufferMaxSize = 32 * 1024;
+      BufferMax     = BufferMaxSize-1;
+
+TYPE BufferIndex = [ 0..BufferMax     ];
+     BufferSize  = [ 0..BufferMaxSize ];
+     BufferArray = ARRAY BufferIndex OF BYTE;
+     BufferPtr   = POINTER TO BufferArray;
+
+TYPE CompressProc   = PROCEDURE( BufferPtr, BufferPtr, BufferSize ) :BufferSize;
+     UnCompressProc = PROCEDURE( BufferPtr, BufferPtr, BufferSize ) :BufferSize;
+
+PROCEDURE NO_Compression  ( src, trg :BufferPtr; src_size :BufferSize ) :BufferSize;
+PROCEDURE NO_UnCompression( src, trg :BufferPtr; src_size :BufferSize ) :BufferSize;
+
+PROCEDURE KH_Compression  ( src, trg :BufferPtr; src_size :BufferSize ) :BufferSize;
+PROCEDURE KH_UnCompression( src, trg :BufferPtr; src_size :BufferSize ) :BufferSize;
+
+PROCEDURE M2_Compression  ( src, trg :BufferPtr; src_size :BufferSize ) :BufferSize;
+PROCEDURE M2_UnCompression( src, trg :BufferPtr; src_size :BufferSize ) :BufferSize;
+
+CONST SS_Compression   ::= NO_Compression;
+      SS_UnCompression ::= NO_UnCompression;
+
+END LZDEF.
